@@ -3,6 +3,7 @@ import { ButtonHTMLAttributes, ForwardedRef, forwardRef, PropsWithChildren } fro
 import { twMerge } from "tailwind-merge";
 import { getComponentSizeClass } from "../../functions";
 import ButtonClient from "./client";
+import Spinner from "../spinner/spinner";
 
 export type ButtonProps = {
     className?: string;
@@ -30,6 +31,7 @@ function Button(
 ) {
     const mergedClassName = twMerge(
         ["relative", "overflow-hidden", "cursor-pointer"],
+        ["flex", "justify-center", "items-center"],
         ["rounded-md", "font-bold"],
         ["transition-all", "duration-300"],
         getComponentSizeClass(size),
@@ -44,17 +46,18 @@ function Button(
             <button
                 ref={ref}
                 type={type}
-                disabled={disabled || loading}
+                disabled={disabled}
                 className={mergedClassName}
                 {...props}>
-                {loading ? "Loading..." : children}
+                {loading ? <Spinner size={size} className={"text-disabled-dark"} /> : children}
             </button>
             {onClick && (
                 <ButtonClient
                     buttonRef={ref}
                     onClick={onClick}
                     color={color}
-                    disabled={disabled || loading}
+                    disabled={disabled}
+                    loading={loading}
                 />
             )}
         </>
