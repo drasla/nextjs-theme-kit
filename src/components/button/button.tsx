@@ -35,9 +35,7 @@ function Button(
         ["rounded-md", "font-bold"],
         ["transition-all", "duration-300"],
         getComponentSizeClass(size),
-        disabled || loading
-            ? getButtonColorClass(variant, "disabled")
-            : getButtonColorClass(variant, color),
+        disabled ? getButtonColorClass(variant, "disabled") : getButtonColorClass(variant, color),
         className,
     );
 
@@ -52,13 +50,7 @@ function Button(
                 {loading ? <Spinner size={size} className={"text-disabled-dark"} /> : children}
             </button>
             {onClick && (
-                <ButtonClient
-                    buttonRef={ref}
-                    onClick={onClick}
-                    color={color}
-                    disabled={disabled}
-                    loading={loading}
-                />
+                <ButtonClient buttonRef={ref} onClick={onClick} color={color} disabled={disabled} />
             )}
         </>
     );

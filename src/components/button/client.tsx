@@ -15,10 +15,9 @@ export type ButtonClientProps = {
     onClick: MouseEventHandler<HTMLButtonElement>;
     color?: THEME_COLOR;
     disabled?: boolean;
-    loading?: boolean;
 };
 
-function ButtonClient({ buttonRef, color, disabled, loading, onClick }: ButtonClientProps) {
+function ButtonClient({ buttonRef, color, disabled, onClick }: ButtonClientProps) {
     const { containerRef, createRipple } = useRipple<HTMLButtonElement>(color);
 
     useEffect(() => {
