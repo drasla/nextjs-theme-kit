@@ -13,22 +13,25 @@ export type ButtonProps = {
 } & PropsWithChildren &
     ButtonHTMLAttributes<HTMLButtonElement>;
 
-function Button({
-    variant,
-    color,
-    type = "button",
-    size = "medium",
-    loading = false,
-    disabled,
-    onClick,
-    className,
-    children,
-    ...props
-}: ButtonProps, ref: ForwardedRef<HTMLButtonElement>) {
+function Button(
+    {
+        variant,
+        color,
+        type = "button",
+        size = "medium",
+        loading = false,
+        disabled,
+        onClick,
+        className,
+        children,
+        ...props
+    }: ButtonProps,
+    ref: ForwardedRef<HTMLButtonElement>,
+) {
     const mergedClassName = twMerge(
-        "relative overflow-hidden cursor-pointer",
-        "rounded-md font-bold",
-        "transition-all duration-300",
+        ["relative", "overflow-hidden", "cursor-pointer"],
+        ["rounded-md", "font-bold"],
+        ["transition-all", "duration-300"],
         getComponentSizeClass(size),
         disabled || loading
             ? getButtonColorClass(variant, "disabled")
