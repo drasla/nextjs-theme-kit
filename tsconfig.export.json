@@ -1,0 +1,16 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": false,
+        "declaration": true,
+        "inlineSourceMap": true,
+        "removeComments": true,
+        "outDir": "./dist",
+        "module": "CommonJS",
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "jsx": "react-jsx"
+    },
+    "include": ["./src/**/*"],
+    "exclude": ["node_modules"]
+}
