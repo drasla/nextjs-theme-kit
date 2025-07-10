@@ -3,7 +3,6 @@
 import {
     ChangeEvent,
     ChangeEventHandler,
-    FocusEvent,
     ForwardedRef,
     KeyboardEvent,
     ReactNode,
@@ -23,6 +22,7 @@ type InputClientProps = {
     shrink?: boolean;
     prefix?: ReactNode;
     error?: string;
+    label?: string;
 };
 
 function InputClient({
@@ -36,10 +36,12 @@ function InputClient({
     shrink: shrinkProp,
     prefix,
     error,
+    label,
 }: InputClientProps) {
     const shrink = shrinkProp || !!prefix;
     const [isFocused, setIsFocused] = useState(shrink);
     const localInputRef = useRef<HTMLInputElement>(null);
+    const hasPrefixSuffix = inputPrefix || inputSuffix;
 
     // ref 동기화
     useEffect(() => {
@@ -56,90 +58,81 @@ function InputClient({
         if (!inputElement) return;
 
         // 기존 prefixSuffixUtils 로직
-        const prefixSuffixUtils = {
-            getValidRange: () => {
-                const prefixLength = inputPrefix.length;
-                const valueLength = value.length;
-                return {
-                    start: prefixLength,
-                    end: prefixLength + valueLength,
-                    total: prefixLength + valueLength + inputSuffix.length,
-                };
-            },
+        const prefixSuffixUtils = hasPrefixSuffix
+            ? {
+                  getValidRange: () => {
+                      const prefixLength = inputPrefix.length;
+                      const valueLength = value.length;
+                      return {
+                          start: prefixLength,
+                          end: prefixLength + valueLength,
+                          total: prefixLength + valueLength + inputSuffix.length,
+                      };
+                  },
 
-            enforceCursorPosition: () => {
-                if (!inputElement) return;
+                  enforceCursorPosition: () => {
+                      if (!inputElement) return;
 
-                const cursorStart = inputElement.selectionStart || 0;
-                const cursorEnd = inputElement.selectionEnd || 0;
-                const range = prefixSuffixUtils.getValidRange();
+                      const cursorStart = inputElement.selectionStart || 0;
+                      const cursorEnd = inputElement.selectionEnd || 0;
+                      if (prefixSuffixUtils) {
+                          const range = prefixSuffixUtils.getValidRange();
 
-                if (cursorStart !== cursorEnd) {
-                    const newStart = Math.max(cursorStart, range.start);
-                    const newEnd = Math.min(cursorEnd, range.end);
+                          if (cursorStart !== cursorEnd) {
+                              const newStart = Math.max(cursorStart, range.start);
+                              const newEnd = Math.min(cursorEnd, range.end);
 
-                    if (newStart !== cursorStart || newEnd !== cursorEnd) {
-                        inputElement.setSelectionRange(newStart, newEnd);
-                    }
-                } else if (cursorStart < range.start) {
-                    inputElement.setSelectionRange(range.start, range.start);
-                } else if (cursorStart > range.end) {
-                    inputElement.setSelectionRange(range.end, range.end);
-                }
-            },
-
-            handlePrefixSuffixChange: (e: ChangeEvent<HTMLInputElement>, isPrefix: boolean) => {
-                if (onChange) {
-                    onChange({
-                        ...e,
-                        target: { ...e.target, value },
-                        currentTarget: { ...e.currentTarget, value },
-                    } as ChangeEvent<HTMLInputElement>);
-                }
-
-                setTimeout(() => {
-                    if (!inputElement) return;
-                    const range = prefixSuffixUtils.getValidRange();
-                    const position = isPrefix ? range.start : range.end;
-                    inputElement.setSelectionRange(position, position);
-                }, 0);
-            },
-        };
+                              if (newStart !== cursorStart || newEnd !== cursorEnd) {
+                                  inputElement.setSelectionRange(newStart, newEnd);
+                              }
+                          } else if (cursorStart < range.start) {
+                              inputElement.setSelectionRange(range.start, range.start);
+                          } else if (cursorStart > range.end) {
+                              inputElement.setSelectionRange(range.end, range.end);
+                          }
+                      }
+                  },
+              }
+            : null;
 
         // 핸들러 정의
-        const handleFocus = (_: FocusEvent<HTMLInputElement>) => {
+        const handleFocus = () => {
             setIsFocused(true);
-            prefixSuffixUtils.enforceCursorPosition();
+            if ((inputPrefix || inputSuffix) && prefixSuffixUtils) {
+                prefixSuffixUtils.enforceCursorPosition();
+            }
 
             // 포커스 스타일 업데이트
-            const fieldset = inputElement.closest(".relative")?.querySelector("fieldset");
-            const label = inputElement.closest(".relative")?.querySelector("label");
+            const container = inputElement.closest(".relative");
+            const fieldset = container?.querySelector("fieldset");
+            const labelElement = container?.querySelector("label");
 
             if (fieldset && !error) {
                 fieldset.classList.add("border-primary-main");
                 fieldset.classList.remove("border-disabled-main");
             }
 
-            if (label && !error) {
-                label.classList.add("text-primary-main");
+            if (labelElement && !error) {
+                labelElement.classList.add("text-primary-main");
             }
         };
 
-        const handleBlur = (_: FocusEvent<HTMLInputElement>) => {
+        const handleBlur = () => {
             const shouldStayFocused = value !== "" || !!prefix;
             setIsFocused(shouldStayFocused);
 
             // 블러 스타일 업데이트
-            const fieldset = inputElement.closest(".relative")?.querySelector("fieldset");
-            const label = inputElement.closest(".relative")?.querySelector("label");
+            const container = inputElement.closest(".relative");
+            const fieldset = container?.querySelector("fieldset");
+            const labelElement = container?.querySelector("label");
 
             if (fieldset && !error) {
                 fieldset.classList.remove("border-primary-main");
                 fieldset.classList.add("border-disabled-main");
             }
 
-            if (label && !error) {
-                label.classList.remove("text-primary-main");
+            if (labelElement && !error) {
+                labelElement.classList.remove("text-primary-main");
             }
         };
 
@@ -169,25 +162,27 @@ function InputClient({
         };
 
         const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-            const range = prefixSuffixUtils.getValidRange();
+            if (hasPrefixSuffix && prefixSuffixUtils) {
+                const range = prefixSuffixUtils.getValidRange();
 
-            if (
-                e.key === "Backspace" &&
-                inputElement.selectionStart === range.start &&
-                inputElement.selectionEnd === range.start &&
-                value === ""
-            ) {
-                e.preventDefault();
-                return;
-            }
+                if (
+                    e.key === "Backspace" &&
+                    inputElement.selectionStart === range.start &&
+                    inputElement.selectionEnd === range.start &&
+                    value === ""
+                ) {
+                    e.preventDefault();
+                    return;
+                }
 
-            if (
-                e.key === "Delete" &&
-                inputElement.selectionStart === range.end &&
-                inputElement.selectionEnd === range.end
-            ) {
-                e.preventDefault();
-                return;
+                if (
+                    e.key === "Delete" &&
+                    inputElement.selectionStart === range.end &&
+                    inputElement.selectionEnd === range.end
+                ) {
+                    e.preventDefault();
+                    return;
+                }
             }
 
             if (onKeyDown) {
@@ -252,80 +247,60 @@ function InputClient({
 
         const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
             if (
-                ["Home", "End", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
+                ["Home", "End", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(
+                    e.key,
+                ) &&
+                prefixSuffixUtils
             ) {
                 prefixSuffixUtils.enforceCursorPosition();
             }
         };
 
-        const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-            const newDisplayValue = e.target.value;
-
-            if (!newDisplayValue.startsWith(inputPrefix)) {
-                prefixSuffixUtils.handlePrefixSuffixChange(e, true);
-                return;
-            }
-
-            if (inputSuffix && !newDisplayValue.endsWith(inputSuffix)) {
-                prefixSuffixUtils.handlePrefixSuffixChange(e, false);
-                return;
-            }
-
-            let newValue = newDisplayValue.substring(inputPrefix.length);
-            if (inputSuffix && newValue.endsWith(inputSuffix)) {
-                newValue = newValue.substring(0, newValue.length - inputSuffix.length);
-            }
-
-            const cursorPos = e.target.selectionStart || 0;
-            const adjustedCursorPos = Math.max(0, cursorPos - inputPrefix.length);
-
-            if (onChange) {
-                onChange({
-                    ...e,
-                    target: { ...e.target, value: newValue },
-                    currentTarget: { ...e.currentTarget, value: newValue },
-                } as ChangeEvent<HTMLInputElement>);
-            }
-
-            setTimeout(() => {
-                if (inputElement) {
-                    const newPos = Math.min(
-                        inputPrefix.length + newValue.length,
-                        inputPrefix.length + adjustedCursorPos,
-                    );
-                    inputElement.setSelectionRange(newPos, newPos);
-                }
-            }, 0);
-        };
-
-        const handleClick = () => {
-            prefixSuffixUtils.enforceCursorPosition();
-        };
+        const handleClick =
+            hasPrefixSuffix && prefixSuffixUtils
+                ? () => {
+                      prefixSuffixUtils.enforceCursorPosition();
+                  }
+                : null;
 
         // 이벤트 리스너 등록
         if (!shrink) {
-            inputElement.addEventListener("focus", handleFocus as any);
-            inputElement.addEventListener("blur", handleBlur as any);
+            inputElement.addEventListener("focus", handleFocus);
+            inputElement.addEventListener("blur", handleBlur);
         }
 
-        inputElement.addEventListener("keydown", handleKeyDown as any);
-        inputElement.addEventListener("keyup", handleKeyUp as any);
-        inputElement.addEventListener("change", handleChange as any);
-        inputElement.addEventListener("click", handleClick);
-        inputElement.addEventListener("mouseup", handleClick);
+        if (onKeyDown || formatMode) {
+            inputElement.addEventListener("keydown", handleKeyDown as any);
+        }
+
+        if (handleKeyUp) {
+            inputElement.addEventListener("keyup", handleKeyUp as any);
+        }
+
+        if (handleClick) {
+            inputElement.addEventListener("click", handleClick);
+            inputElement.addEventListener("mouseup", handleClick);
+        }
 
         // 정리
         return () => {
             if (!shrink) {
-                inputElement.removeEventListener("focus", handleFocus as any);
-                inputElement.removeEventListener("blur", handleBlur as any);
+                inputElement.removeEventListener("focus", handleFocus);
+                inputElement.removeEventListener("blur", handleBlur);
             }
 
-            inputElement.removeEventListener("keydown", handleKeyDown as any);
-            inputElement.removeEventListener("keyup", handleKeyUp as any);
-            inputElement.removeEventListener("change", handleChange as any);
-            inputElement.removeEventListener("click", handleClick);
-            inputElement.removeEventListener("mouseup", handleClick);
+            if (onKeyDown || formatMode) {
+                inputElement.removeEventListener("keydown", handleKeyDown as any);
+            }
+
+            if (handleKeyUp) {
+                inputElement.removeEventListener("keyup", handleKeyUp as any);
+            }
+
+            if (handleClick) {
+                inputElement.removeEventListener("click", handleClick);
+                inputElement.removeEventListener("mouseup", handleClick);
+            }
         };
     }, [value, onChange, onKeyDown, formatMode, inputPrefix, inputSuffix, shrink, prefix, error]);
 
@@ -335,27 +310,24 @@ function InputClient({
         if (!inputElement) return;
 
         const isActive = isFocused || value !== "" || !!prefix;
-        const label = inputElement.closest(".relative")?.querySelector("label");
-        const legend = inputElement.closest(".relative")?.querySelector("legend");
+        const container = inputElement.closest(".relative");
+        const labelElement = container?.querySelector("label") as HTMLElement;
+        const legend = container?.querySelector("legend") as HTMLElement;
 
-        if (label) {
+        if (labelElement && label) {
             if (isActive) {
-                label.classList.add("text-xs", "-top-2", "transform-none");
-                label.classList.remove("text-base", "top-1/2", "-translate-y-1/2");
+                labelElement.classList.add("text-xs", "-top-2", "transform-none");
+                labelElement.classList.remove("text-base", "top-1/2", "-translate-y-1/2");
             } else {
-                label.classList.remove("text-xs", "-top-2", "transform-none");
-                label.classList.add("text-base", "top-1/2", "-translate-y-1/2");
+                labelElement.classList.remove("text-xs", "-top-2", "transform-none");
+                labelElement.classList.add("text-base", "top-1/2", "-translate-y-1/2");
             }
         }
 
-        if (legend) {
-            if (isActive) {
-                legend.style.display = "block";
-            } else {
-                legend.style.display = "none";
-            }
+        if (legend && label) {
+            legend.style.visibility = isActive ? "visible" : "hidden";
         }
-    }, [isFocused, value, prefix]);
+    }, [isFocused, value, prefix, label]);
 
     return null;
 }

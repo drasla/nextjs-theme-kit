@@ -63,7 +63,7 @@ function Input(
 ) {
     const shrink = shrinkProp || !!prefix;
     const displayValue = value !== undefined ? `${inputPrefix}${value}${inputSuffix}` : undefined;
-    const isActive = value !== undefined ? value !== "" || !!prefix : false;
+    const isActive = (value !== undefined && value !== "") || !!prefix;
 
     const fieldsetClassName = twMerge(
         ["absolute", "inset-0"],
@@ -139,10 +139,9 @@ function Input(
                     </div>
                 )}
             </div>
-            {(onChange || onKeyDown || formatMode) && value !== undefined && (
                 <InputClient
                     inputRef={ref}
-                    value={value}
+                    value={value || ""}
                     onChange={onChange}
                     onKeyDown={onKeyDown}
                     formatMode={formatMode}
@@ -151,8 +150,8 @@ function Input(
                     shrink={shrink}
                     prefix={prefix}
                     error={error}
+                    label={label}
                 />
-            )}
         </>
     );
 }
