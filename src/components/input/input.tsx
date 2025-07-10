@@ -1,3 +1,5 @@
+"use client";
+
 import {
     ChangeEventHandler,
     InputHTMLAttributes,
@@ -89,9 +91,9 @@ function Input(
     const inputProps =
         value !== undefined
             ? {
-                value: displayValue,
-                onChange: onChange || (() => {}),
-            }
+                  value: displayValue,
+                  onChange: onChange || (() => {}),
+              }
             : {};
 
     return (

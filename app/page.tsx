@@ -10,9 +10,7 @@ function RootPage() {
             <Input
                 name={"url"}
                 value={string}
-                label={"Shorten"}
-                color={"warning"}
-                placeholder={"입력값을 넣어야 함"}
+                label={"Shorten URL"}
                 onChange={e => setString(e.target.value)}
             />
         </main>
