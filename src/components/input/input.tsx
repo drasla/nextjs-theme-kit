@@ -42,6 +42,7 @@ function Input(
         fullWidth,
         type,
         label,
+        name,
         value,
         error,
         placeholder,
@@ -55,13 +56,14 @@ function Input(
         onChange,
         onKeyDown,
         formatMode,
+        readOnly,
         ...props
     }: InputProps,
     ref: ForwardedRef<HTMLInputElement>,
 ) {
     const shrink = shrinkProp || !!prefix;
-    const displayValue = `${inputPrefix}${value}${inputSuffix}`;
-    const isActive = value !== "" || !!prefix;
+    const displayValue = value !== undefined ? `${inputPrefix}${value}${inputSuffix}` : undefined;
+    const isActive = value !== undefined ? value !== "" || !!prefix : false;
 
     const fieldsetClassName = twMerge(
         ["absolute", "inset-0"],
@@ -87,6 +89,14 @@ function Input(
         getTextAlignClass(textAlign),
     );
 
+    const inputProps =
+        value !== undefined
+            ? {
+                  value: displayValue,
+                  onChange: onChange || (() => {}),
+              }
+            : {};
+
     return (
         <>
             <div className={twMerge("w-full", className)}>
@@ -99,17 +109,25 @@ function Input(
                         {prefix && <div>{prefix}</div>}
                         <input
                             ref={ref}
+                            id={name}
+                            name={name}
                             className={inputClassName}
                             type={type}
                             placeholder={label && !isActive ? undefined : placeholder}
                             value={displayValue}
                             disabled={disabled}
+                            readOnly={readOnly}
+                            {...inputProps}
                             {...props}
                         />
                         {suffix && <div>{suffix}</div>}
                     </div>
 
-                    {label && <label className={floatingLabelClassName}>{label}</label>}
+                    {label && (
+                        <label htmlFor={name} className={floatingLabelClassName}>
+                            {label}
+                        </label>
+                    )}
                 </div>
                 {(error || helperText) && (
                     <div
@@ -121,7 +139,7 @@ function Input(
                     </div>
                 )}
             </div>
-            {(onChange || onKeyDown || formatMode) && (
+            {(onChange || onKeyDown || formatMode) && value !== undefined && (
                 <InputClient
                     inputRef={ref}
                     value={value}
