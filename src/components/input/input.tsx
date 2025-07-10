@@ -76,9 +76,9 @@ function Input(
         getComponentSizeClass(size),
     );
     const floatingLabelClassName = twMerge(
-        ["absolute", "left-3", "px-1"],
+        ["absolute", "left-4", "px-1"],
         ["pointer-events-none", "transition-all", "duration-200"],
-        ["text-base", "top-1/2", "-translate-y-1/2"],
+        ["text-base", "top-1/2", "-translate-y-1/2"], // 기본 상태로 설정
         error && "text-error-main",
     );
     const inputClassName = twMerge(
@@ -89,9 +89,9 @@ function Input(
     const inputProps =
         value !== undefined
             ? {
-                  value: displayValue,
-                  onChange: onChange || (() => {}),
-              }
+                value: displayValue,
+                onChange: onChange || (() => {}),
+            }
             : {};
 
     return (

@@ -259,33 +259,46 @@ function InputClient({
         const inputElement = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
         if (!inputElement) return;
 
-        const shouldFloat = isFocused || value !== "" || !!prefix || shrink === true;
+        // 컨테이너 요소 찾기
         const container = inputElement.closest(".relative");
-        const labelElement = container?.querySelector("label") as HTMLElement;
-        const legend = container?.querySelector("legend") as HTMLElement;
-        const fieldset = container?.querySelector("fieldset") as HTMLElement;
+        if (!container) return;
 
-        if (labelElement && label) {
-            if (shouldFloat) {
-                labelElement.classList.add("text-xs", "-top-2", "transform-none");
-                labelElement.classList.remove("text-base", "top-1/2", "-translate-y-1/2");
-            } else {
-                labelElement.classList.remove("text-xs", "-top-2", "transform-none");
-                labelElement.classList.add("text-base", "top-1/2", "-translate-y-1/2");
-            }
+        // 요소 찾기
+        const labelElement = container.querySelector("label") as HTMLElement;
+        const legend = container.querySelector("legend") as HTMLElement;
+        const fieldset = container.querySelector("fieldset") as HTMLElement;
+        if (!labelElement || !legend || !fieldset || !label) return;
+
+        // 상태 확인
+        const hasValue = value !== "";
+        const hasPrefix = !!prefix;
+        const shouldFloatLabel = isFocused || hasValue || hasPrefix || shrink === true;
+
+        console.log(shouldFloatLabel);
+
+        // legend 상태 업데이트 (값이 있거나, 포커스되었거나, prefix가 있거나, shrink가 true일 때 보임)
+        if (shouldFloatLabel) {
+            legend.classList.remove("hidden");
+            legend.classList.add("invisible");
+        } else {
+            legend.classList.remove("invisible");
+            legend.classList.add("hidden");
         }
 
-        if (legend && label) {
-            if (shouldFloat) {
-                legend.classList.remove("hidden");
-                legend.classList.add("block");
-            } else {
-                legend.classList.remove("block");
-                legend.classList.add("hidden");
-            }
+        // label 상태 업데이트
+        if (shouldFloatLabel) {
+            // 상단으로 이동하는 애니메이션 적용
+            labelElement.classList.add("text-xs", "-top-2", "transform-none");
+            labelElement.classList.remove("text-base", "top-1/2", "-translate-y-1/2");
+        } else {
+            // 기본 위치로 이동
+            labelElement.classList.remove("text-xs", "-top-2", "transform-none");
+            labelElement.classList.add("text-base", "top-1/2", "-translate-y-1/2");
+            labelElement.style.opacity = "1";
         }
 
-        if (fieldset && !error) {
+        // 테두리 색상 업데이트
+        if (!error) {
             if (isFocused) {
                 const borderColor = color ? `border-${color}-main` : "border-primary-main";
                 fieldset.classList.add(borderColor);
@@ -299,7 +312,8 @@ function InputClient({
             }
         }
 
-        if (labelElement && !error) {
+        // 텍스트 색상 업데이트
+        if (!error) {
             if (isFocused) {
                 const textColor = color ? `text-${color}-main` : "text-primary-main";
                 labelElement.classList.add(textColor);
@@ -311,9 +325,8 @@ function InputClient({
             }
         }
 
-        if (label) {
-            inputElement.placeholder = shouldFloat ? placeholder || "" : "";
-        }
+        // placeholder 업데이트
+        inputElement.placeholder = shouldFloatLabel ? placeholder || "" : "";
     }, [isFocused, value, prefix, label, placeholder, shrink, error, name, color]);
 
     return null;
