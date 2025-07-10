@@ -1,4 +1,4 @@
-import { THEME_COLOR, THEME_SIZE } from "../../types/theme";
+import { THEME_SIZE } from "../../types/theme";
 import { twMerge } from "tailwind-merge";
 
 type Props = {

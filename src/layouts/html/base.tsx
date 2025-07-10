@@ -5,14 +5,15 @@ import AsideProvider from "../../providers/aside/asideProvider";
 
 type Props = {
     lang?: string;
+    className?: string;
 } & PropsWithChildren;
 
-async function HTML({ lang, children }: Props) {
+async function HTML({ lang, className, children }: Props) {
     return (
         <ThemeProvider>
             <AsideProvider>
-                <html lang={lang || "ko"}>
-                    <body className={twMerge("theme-initial")}>{children}</body>
+                <html lang={lang || "en"}>
+                    <body className={twMerge("theme-initial", className)}>{children}</body>
                 </html>
             </AsideProvider>
         </ThemeProvider>
