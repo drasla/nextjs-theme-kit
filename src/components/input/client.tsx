@@ -7,9 +7,9 @@ import {
     KeyboardEvent,
     ReactNode,
     useEffect,
-    useRef,
     useState,
 } from "react";
+import { THEME_COLOR } from "../../types/theme";
 
 type InputClientProps = {
     inputRef: ForwardedRef<HTMLInputElement>;
@@ -23,41 +23,62 @@ type InputClientProps = {
     prefix?: ReactNode;
     error?: string;
     label?: string;
+    name?: string;
+    placeholder?: string;
+    color?: THEME_COLOR;
 };
 
 function InputClient({
-    inputRef,
     value = "",
     onChange,
     onKeyDown,
     formatMode,
     inputPrefix = "",
     inputSuffix = "",
-    shrink: shrinkProp,
+    shrink,
     prefix,
     error,
     label,
+    name,
+    placeholder,
+    color,
 }: InputClientProps) {
-    const shrink = shrinkProp || !!prefix;
-    const [isFocused, setIsFocused] = useState(shrink);
-    const localInputRef = useRef<HTMLInputElement>(null);
+    const [isFocused, setIsFocused] = useState(false);
     const hasPrefixSuffix = inputPrefix || inputSuffix;
 
-    // ref 동기화
+    // 이벤트 핸들러 등록
     useEffect(() => {
-        if (typeof inputRef === "function") {
-            inputRef(localInputRef.current);
-        } else if (inputRef && "current" in inputRef) {
-            inputRef.current = localInputRef.current;
-        }
-    }, [inputRef]);
+        if (!name) return;
 
-    // DOM 요소 찾기 및 이벤트 리스너 등록
+        const inputElement = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
+        if (!inputElement) {
+            return;
+        }
+
+        const handleFocus = () => {
+            setIsFocused(true);
+        };
+
+        const handleBlur = () => {
+            setIsFocused(false);
+        };
+
+        inputElement.addEventListener("focus", handleFocus);
+        inputElement.addEventListener("blur", handleBlur);
+
+        return () => {
+            inputElement.removeEventListener("focus", handleFocus);
+            inputElement.removeEventListener("blur", handleBlur);
+        };
+    }, [name]);
+
+    // 포맷팅 및 기타 핸들러
     useEffect(() => {
-        const inputElement = localInputRef.current;
+        if (!name) return;
+
+        const inputElement = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
         if (!inputElement) return;
 
-        // 기존 prefixSuffixUtils 로직
         const prefixSuffixUtils = hasPrefixSuffix
             ? {
                   getValidRange: () => {
@@ -69,19 +90,15 @@ function InputClient({
                           total: prefixLength + valueLength + inputSuffix.length,
                       };
                   },
-
                   enforceCursorPosition: () => {
                       if (!inputElement) return;
-
                       const cursorStart = inputElement.selectionStart || 0;
                       const cursorEnd = inputElement.selectionEnd || 0;
                       if (prefixSuffixUtils) {
                           const range = prefixSuffixUtils.getValidRange();
-
                           if (cursorStart !== cursorEnd) {
                               const newStart = Math.max(cursorStart, range.start);
                               const newEnd = Math.min(cursorEnd, range.end);
-
                               if (newStart !== cursorStart || newEnd !== cursorEnd) {
                                   inputElement.setSelectionRange(newStart, newEnd);
                               }
@@ -95,53 +112,11 @@ function InputClient({
               }
             : null;
 
-        // 핸들러 정의
-        const handleFocus = () => {
-            setIsFocused(true);
-            if ((inputPrefix || inputSuffix) && prefixSuffixUtils) {
-                prefixSuffixUtils.enforceCursorPosition();
-            }
-
-            // 포커스 스타일 업데이트
-            const container = inputElement.closest(".relative");
-            const fieldset = container?.querySelector("fieldset");
-            const labelElement = container?.querySelector("label");
-
-            if (fieldset && !error) {
-                fieldset.classList.add("border-primary-main");
-                fieldset.classList.remove("border-disabled-main");
-            }
-
-            if (labelElement && !error) {
-                labelElement.classList.add("text-primary-main");
-            }
-        };
-
-        const handleBlur = () => {
-            const shouldStayFocused = value !== "" || !!prefix;
-            setIsFocused(shouldStayFocused);
-
-            // 블러 스타일 업데이트
-            const container = inputElement.closest(".relative");
-            const fieldset = container?.querySelector("fieldset");
-            const labelElement = container?.querySelector("label");
-
-            if (fieldset && !error) {
-                fieldset.classList.remove("border-primary-main");
-                fieldset.classList.add("border-disabled-main");
-            }
-
-            if (labelElement && !error) {
-                labelElement.classList.remove("text-primary-main");
-            }
-        };
-
         const isAllowedKeyCombo = (e: KeyboardEvent<HTMLInputElement>) => {
             const isCtrlOrCmd = e.ctrlKey || e.metaKey;
             if (isCtrlOrCmd && ["a", "c", "v", "x", "z"].includes(e.key.toLowerCase())) {
                 return true;
             }
-
             const navigationKeys = [
                 "ArrowUp",
                 "ArrowDown",
@@ -157,14 +132,12 @@ function InputClient({
                 "PageUp",
                 "PageDown",
             ];
-
             return navigationKeys.includes(e.key);
         };
 
         const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
             if (hasPrefixSuffix && prefixSuffixUtils) {
                 const range = prefixSuffixUtils.getValidRange();
-
                 if (
                     e.key === "Backspace" &&
                     inputElement.selectionStart === range.start &&
@@ -174,7 +147,6 @@ function InputClient({
                     e.preventDefault();
                     return;
                 }
-
                 if (
                     e.key === "Delete" &&
                     inputElement.selectionStart === range.end &&
@@ -197,18 +169,15 @@ function InputClient({
                     e.preventDefault();
                     const start = inputElement.selectionStart ?? 0;
                     const end = inputElement.selectionEnd ?? 0;
-
                     const newValue =
                         value.substring(0, start - inputPrefix.length) +
                         e.key.toUpperCase() +
                         value.substring(end - inputPrefix.length);
-
                     if (onChange) {
                         onChange({
                             target: { value: newValue },
                             currentTarget: { value: newValue },
                         } as ChangeEvent<HTMLInputElement>);
-
                         setTimeout(() => {
                             inputElement.setSelectionRange(start + 1, start + 1);
                         }, 0);
@@ -220,18 +189,15 @@ function InputClient({
                     e.preventDefault();
                     const start = inputElement.selectionStart ?? 0;
                     const end = inputElement.selectionEnd ?? 0;
-
                     const newValue =
                         value.substring(0, start - inputPrefix.length) +
                         e.key.toLowerCase() +
                         value.substring(end - inputPrefix.length);
-
                     if (onChange) {
                         onChange({
                             target: { value: newValue },
                             currentTarget: { value: newValue },
                         } as ChangeEvent<HTMLInputElement>);
-
                         setTimeout(() => {
                             inputElement.setSelectionRange(start + 1, start + 1);
                         }, 0);
@@ -258,64 +224,49 @@ function InputClient({
 
         const handleClick =
             hasPrefixSuffix && prefixSuffixUtils
-                ? () => {
-                      prefixSuffixUtils.enforceCursorPosition();
-                  }
+                ? () => prefixSuffixUtils.enforceCursorPosition()
                 : null;
-
-        // 이벤트 리스너 등록
-        if (!shrink) {
-            inputElement.addEventListener("focus", handleFocus);
-            inputElement.addEventListener("blur", handleBlur);
-        }
 
         if (onKeyDown || formatMode) {
             inputElement.addEventListener("keydown", handleKeyDown as any);
         }
-
-        if (handleKeyUp) {
+        if (hasPrefixSuffix && prefixSuffixUtils) {
             inputElement.addEventListener("keyup", handleKeyUp as any);
         }
-
         if (handleClick) {
             inputElement.addEventListener("click", handleClick);
             inputElement.addEventListener("mouseup", handleClick);
         }
 
-        // 정리
         return () => {
-            if (!shrink) {
-                inputElement.removeEventListener("focus", handleFocus);
-                inputElement.removeEventListener("blur", handleBlur);
-            }
-
             if (onKeyDown || formatMode) {
                 inputElement.removeEventListener("keydown", handleKeyDown as any);
             }
-
-            if (handleKeyUp) {
+            if (hasPrefixSuffix && prefixSuffixUtils) {
                 inputElement.removeEventListener("keyup", handleKeyUp as any);
             }
-
             if (handleClick) {
                 inputElement.removeEventListener("click", handleClick);
                 inputElement.removeEventListener("mouseup", handleClick);
             }
         };
-    }, [value, onChange, onKeyDown, formatMode, inputPrefix, inputSuffix, shrink, prefix, error]);
+    }, [value, onChange, onKeyDown, formatMode, inputPrefix, inputSuffix, hasPrefixSuffix, name]);
 
-    // 레이블 및 필드셋 상태 업데이트
+    // UI 상태 제어
     useEffect(() => {
-        const inputElement = localInputRef.current;
+        if (!name) return;
+
+        const inputElement = document.querySelector(`input[name="${name}"]`) as HTMLInputElement;
         if (!inputElement) return;
 
-        const isActive = isFocused || value !== "" || !!prefix;
+        const shouldFloat = isFocused || value !== "" || !!prefix || shrink === true;
         const container = inputElement.closest(".relative");
         const labelElement = container?.querySelector("label") as HTMLElement;
         const legend = container?.querySelector("legend") as HTMLElement;
+        const fieldset = container?.querySelector("fieldset") as HTMLElement;
 
         if (labelElement && label) {
-            if (isActive) {
+            if (shouldFloat) {
                 labelElement.classList.add("text-xs", "-top-2", "transform-none");
                 labelElement.classList.remove("text-base", "top-1/2", "-translate-y-1/2");
             } else {
@@ -325,9 +276,45 @@ function InputClient({
         }
 
         if (legend && label) {
-            legend.style.visibility = isActive ? "visible" : "hidden";
+            if (shouldFloat) {
+                legend.classList.remove("hidden");
+                legend.classList.add("block");
+            } else {
+                legend.classList.remove("block");
+                legend.classList.add("hidden");
+            }
         }
-    }, [isFocused, value, prefix, label]);
+
+        if (fieldset && !error) {
+            if (isFocused) {
+                const borderColor = color ? `border-${color}-main` : "border-primary-main";
+                fieldset.classList.add(borderColor);
+                fieldset.classList.remove("border-disabled-main");
+            } else {
+                fieldset.classList.remove("border-primary-main");
+                if (color) {
+                    fieldset.classList.remove(`border-${color}-main`);
+                }
+                fieldset.classList.add("border-disabled-main");
+            }
+        }
+
+        if (labelElement && !error) {
+            if (isFocused) {
+                const textColor = color ? `text-${color}-main` : "text-primary-main";
+                labelElement.classList.add(textColor);
+            } else {
+                labelElement.classList.remove("text-primary-main");
+                if (color) {
+                    labelElement.classList.remove(`text-${color}-main`);
+                }
+            }
+        }
+
+        if (label) {
+            inputElement.placeholder = shouldFloat ? placeholder || "" : "";
+        }
+    }, [isFocused, value, prefix, label, placeholder, shrink, error, name, color]);
 
     return null;
 }

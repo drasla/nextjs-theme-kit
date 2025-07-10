@@ -1,5 +1,3 @@
-"use client";
-
 import {
     ChangeEventHandler,
     InputHTMLAttributes,
@@ -57,13 +55,14 @@ function Input(
         onKeyDown,
         formatMode,
         readOnly,
+        color,
         ...props
     }: InputProps,
     ref: ForwardedRef<HTMLInputElement>,
 ) {
     const shrink = shrinkProp || !!prefix;
-    const displayValue = value !== undefined ? `${inputPrefix}${value}${inputSuffix}` : undefined;
-    const isActive = (value !== undefined && value !== "") || !!prefix;
+    const displayValue =
+        value !== undefined ? `${inputPrefix ?? ""}${value}${inputSuffix ?? ""}` : undefined;
 
     const fieldsetClassName = twMerge(
         ["absolute", "inset-0"],
@@ -71,7 +70,7 @@ function Input(
         ["transition-colors", "pointer-event-none"],
         error ? "border-error-main" : "",
     );
-    const legendClassName = twMerge(["invisible", "ml-2.5", "px-0.5", "h-0"]);
+    const legendClassName = twMerge(["hidden", "ml-2.5", "px-0.5", "h-0"]);
     const innerContainerClassName = twMerge(
         ["flex", "items-center", "gap-3", "px-3"],
         getComponentSizeClass(size),
@@ -79,9 +78,7 @@ function Input(
     const floatingLabelClassName = twMerge(
         ["absolute", "left-3", "px-1"],
         ["pointer-events-none", "transition-all", "duration-200"],
-        isActive
-            ? ["text-xs", "-top-2", "transform-none"]
-            : ["text-base", "top-1/2", "-translate-y-1/2"],
+        ["text-base", "top-1/2", "-translate-y-1/2"],
         error && "text-error-main",
     );
     const inputClassName = twMerge(
@@ -102,7 +99,7 @@ function Input(
             <div className={twMerge("w-full", className)}>
                 <div className={twMerge(["relative", fullWidth && "w-full"])}>
                     <fieldset className={fieldsetClassName}>
-                        {isActive && label && <legend className={legendClassName}>{label}</legend>}
+                        {label && <legend className={legendClassName}>{label}</legend>}
                     </fieldset>
 
                     <div className={innerContainerClassName}>
@@ -113,7 +110,7 @@ function Input(
                             name={name}
                             className={inputClassName}
                             type={type}
-                            placeholder={label && !isActive ? undefined : placeholder}
+                            placeholder={!label ? placeholder : undefined}
                             value={displayValue}
                             disabled={disabled}
                             readOnly={readOnly}
@@ -139,19 +136,22 @@ function Input(
                     </div>
                 )}
             </div>
-                <InputClient
-                    inputRef={ref}
-                    value={value || ""}
-                    onChange={onChange}
-                    onKeyDown={onKeyDown}
-                    formatMode={formatMode}
-                    inputPrefix={inputPrefix}
-                    inputSuffix={inputSuffix}
-                    shrink={shrink}
-                    prefix={prefix}
-                    error={error}
-                    label={label}
-                />
+            <InputClient
+                inputRef={ref}
+                value={value || ""}
+                onChange={onChange}
+                onKeyDown={onKeyDown}
+                formatMode={formatMode}
+                inputPrefix={inputPrefix}
+                inputSuffix={inputSuffix}
+                shrink={shrink}
+                prefix={prefix}
+                error={error}
+                label={label}
+                name={name}
+                placeholder={placeholder}
+                color={color}
+            />
         </>
     );
 }

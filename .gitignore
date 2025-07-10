@@ -21,6 +21,5 @@ yarn-error.log*
 
 
 /public
-/app
 /actions
 /graphql
