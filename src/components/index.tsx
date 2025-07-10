@@ -1,4 +1,5 @@
 import { Button } from "./button";
+import { Input } from "./input";
 import { Spinner } from "./spinner";
 
-export { Button, Spinner };
+export { Button, Input, Spinner };

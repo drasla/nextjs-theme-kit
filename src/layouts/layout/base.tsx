@@ -17,7 +17,7 @@ function Layout({ aside, header, footer, toast, children }: Props) {
                 {aside && <AsideUIProvider>{aside}</AsideUIProvider>}
                 <div
                     className={twMerge(
-                        ["flex-1"],
+                        ["flex-1", "w-full"],
                         ["flex", "flex-col", "relative"],
                         ["transition-all", "duration-200"],
                         aside ? "lg:ml-(--width-aside)" : "",
