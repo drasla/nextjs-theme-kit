@@ -9,3 +9,6 @@ export type THEME_COLOR =
     | "disabled";
 export type BUTTON_VARIANT = "outlined" | "filled" | "text";
 export type THEME_SIZE = "small" | "medium" | "large";
+
+export type HorizontalAlign = "left" | "right" | "center";
+export type VerticalAlign = "top" | "bottom" | "center";

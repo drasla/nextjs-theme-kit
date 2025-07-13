@@ -6,6 +6,7 @@ import ButtonClient from "./client";
 import Spinner from "../spinner/spinner";
 
 export type ButtonProps = {
+    fullWidth?: boolean;
     className?: string;
     variant?: BUTTON_VARIANT;
     size?: THEME_SIZE;
@@ -18,6 +19,7 @@ function Button(
     {
         variant,
         color,
+        fullWidth,
         type = "button",
         size = "medium",
         loading = false,
@@ -36,6 +38,7 @@ function Button(
         ["transition-all", "duration-300"],
         getComponentSizeClass(size),
         disabled ? getButtonColorClass(variant, "disabled") : getButtonColorClass(variant, color),
+        fullWidth && "w-full",
         className,
     );
 

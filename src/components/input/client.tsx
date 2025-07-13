@@ -274,8 +274,6 @@ function InputClient({
         const hasPrefix = !!prefix;
         const shouldFloatLabel = isFocused || hasValue || hasPrefix || shrink === true;
 
-        console.log(shouldFloatLabel);
-
         // legend 상태 업데이트 (값이 있거나, 포커스되었거나, prefix가 있거나, shrink가 true일 때 보임)
         if (shouldFloatLabel) {
             legend.classList.remove("hidden");
