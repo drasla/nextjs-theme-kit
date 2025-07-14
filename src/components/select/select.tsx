@@ -4,6 +4,7 @@ import { THEME_COLOR, THEME_SIZE } from "../../types/theme";
 import {
     Children,
     createContext,
+    forwardRef,
     InputHTMLAttributes,
     isValidElement,
     PropsWithChildren,
@@ -140,6 +141,7 @@ function Select(
     const legendClassName = twMerge(["invisible", "ml-2.5", "px-0.5", "h-0"]);
 
     const innerContainerClassName = twMerge(
+        ["h-full", "min-h-6"],
         ["flex", "items-center", "gap-3", "px-3"],
         getComponentSizeClass(size),
     );
@@ -158,6 +160,7 @@ function Select(
         ["flex-1", "outline-none", "bg-transparent", "z-1", "cursor-pointer"],
         textAlign === "center" && "text-center",
         textAlign === "right" && "text-right",
+        displayValue == "" && "h-6",
     );
 
     return (
@@ -220,4 +223,7 @@ function Select(
     );
 }
 
-export default Select;
+const ForwardedSelect = forwardRef(Select);
+ForwardedSelect.displayName = "Select";
+
+export default ForwardedSelect;

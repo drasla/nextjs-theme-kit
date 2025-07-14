@@ -68,7 +68,7 @@ function Input(
 
     const fieldsetClassName = twMerge(
         ["absolute", "inset-0"],
-        ["rounded-lg", "border", "border-disabled-main"],
+        ["rounded-lg", "border", "theme-border"],
         ["transition-colors", "pointer-event-none"],
         error ? "border-error-main" : "",
     );

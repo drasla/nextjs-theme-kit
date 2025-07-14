@@ -300,13 +300,13 @@ function InputClient({
             if (isFocused) {
                 const borderColor = color ? `border-${color}-main` : "border-primary-main";
                 fieldset.classList.add(borderColor);
-                fieldset.classList.remove("border-disabled-main");
+                fieldset.classList.remove("theme-border");
             } else {
                 fieldset.classList.remove("border-primary-main");
                 if (color) {
                     fieldset.classList.remove(`border-${color}-main`);
                 }
-                fieldset.classList.add("border-disabled-main");
+                fieldset.classList.add("theme-border");
             }
         }
 

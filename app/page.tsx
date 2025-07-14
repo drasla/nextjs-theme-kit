@@ -2,6 +2,8 @@
 
 import Input from "../src/components/input/input";
 import { useState } from "react";
+import Select from "../src/components/select/select";
+import Option from "../src/components/select/option";
 
 function RootPage() {
     const [string, setString] = useState("");
@@ -13,6 +15,10 @@ function RootPage() {
                 label={"Shorten URL"}
                 onChange={e => setString(e.target.value)}
             />
+            <Select displayValue={""}>
+                <Option value={"1"}>Value1</Option>
+                <Option value={"2"}>Value2</Option>
+            </Select>
         </main>
     );
 }
