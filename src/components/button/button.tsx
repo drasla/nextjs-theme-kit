@@ -1,9 +1,11 @@
+"use client";
+
 import { BUTTON_VARIANT, THEME_COLOR, THEME_SIZE } from "../../types/theme";
-import { ButtonHTMLAttributes, ForwardedRef, forwardRef, PropsWithChildren } from "react";
+import { ButtonHTMLAttributes, PropsWithChildren, useEffect, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 import { getComponentSizeClass } from "../../functions";
-import ButtonClient from "./client";
 import Spinner from "../spinner/spinner";
+import useRipple from "../../hooks/useRipple/useRipple";
 
 export type ButtonProps = {
     fullWidth?: boolean;
@@ -28,9 +30,40 @@ function Button(
         className,
         children,
         ...props
-    }: ButtonProps,
-    ref: ForwardedRef<HTMLButtonElement>,
+    }: ButtonProps
 ) {
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const { containerRef, createRipple} = useRipple<HTMLButtonElement>(color);
+
+    useEffect(() => {
+        const button = buttonRef.current;
+        if (!button || !onClick) return;
+
+        containerRef.current = button;
+
+        const handleClick = (e: MouseEvent) => {
+            if (disabled) return;
+
+            const reactEvent = {
+                ...e,
+                currentTarget: button,
+                target: button,
+                preventDefault: () => e.preventDefault(),
+                stopPropagation: () => e.stopPropagation(),
+                nativeEvent: e,
+            } as unknown as React.MouseEvent<HTMLButtonElement>;
+
+            createRipple(reactEvent);
+            onClick(reactEvent);
+        }
+
+        button.addEventListener("click", handleClick);
+        return () => {
+            button.removeEventListener("click", handleClick);
+        }
+    }, [onClick, color, disabled, createRipple]);
+
+
     const mergedClassName = twMerge(
         ["relative", "overflow-hidden", "cursor-pointer"],
         ["flex", "justify-center", "items-center"],
@@ -45,24 +78,18 @@ function Button(
     return (
         <>
             <button
-                ref={ref}
+                ref={buttonRef}
                 type={type}
                 disabled={disabled}
                 className={mergedClassName}
                 {...props}>
                 {loading ? <Spinner size={size} className={"text-disabled-dark"} /> : children}
             </button>
-            {onClick && (
-                <ButtonClient buttonRef={ref} onClick={onClick} color={color} disabled={disabled} />
-            )}
         </>
     );
 }
 
-const ForwardedButton = forwardRef(Button);
-ForwardedButton.displayName = "Button";
-
-export default ForwardedButton;
+export default Button;
 
 const outlinedColorClasses: Record<string, string> = {
     primary: twMerge(
